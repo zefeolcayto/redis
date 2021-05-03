@@ -1,0 +1,119 @@
+---
+- name: Build Redis
+  make:
+    chdir: /opt/redis-5.0.9
+  register: redisbuild
+
+- name: Test Redis
+  make:
+    chdir: /opt/redis-5.0.9
+    target: test
+  register: redistest
+
+- name: Install Redis
+  make:
+    chdir: /opt/redis-5.0.9
+    target: install
+  register: redisinstall
+
+- name: build
+  debug:
+    msg: "OK"
+  with_items: "{{ redisbuild.stdout_lines }}"
+  when: item.find('make test') != -1
+
+- name: test
+  debug:
+    msg: "OK"
+  with_items: "{{ redistest.stdout_lines }}"
+  when: item.find('All tests passed without errors') != -1
+
+- name: install
+  debug:
+    msg: "OK"
+  with_items: "{{ redisinstall.stdout_lines }}"
+  when: item.find('make test') != -1
+
+- name: create redis user
+  user:
+    name: redis
+    createhome: no
+    system: yes
+
+- name: create /etc/redis directory
+  file:
+    path: /etc/redis
+    owner: redis
+    group: redis
+    mode: '0770'
+    state: directory
+
+- name: create /var/lib/redis directory
+  file:
+    path: /var/lib/redis
+    owner: redis
+    group: redis
+    mode: '0770'
+    state: directory
+
+- name: create /var/log/redis/ directory
+  file:
+    path: /var/log/redis/
+    owner: redis
+    group: redis
+    mode: '0770'
+    state: directory
+
+- name: initial master redis conf
+  template:
+    src: redis-master.j2
+    dest: /etc/redis/redis.conf
+    owner: redis
+    group: redis
+    mode: '0770'
+  when: group_names[0] == "master"
+
+- name: initial slave redis conf
+  template:
+    src: redis-slaves.j2
+    dest: /etc/redis/redis.conf
+    owner: redis
+    group: redis
+    mode: '0770'
+  when: group_names[0] == "slave"
+
+- name: initial master sentinel conf
+  template:
+    src: sentinel-master.j2
+    dest: /etc/redis/sentinel.conf
+    owner: redis
+    group: redis
+    mode: '0770'
+  when: group_names[0] == "master"
+
+- name: initial slave sentinel conf
+  template:
+    src: sentinel-slaves.j2
+    dest: /etc/redis/sentinel.conf
+    owner: redis
+    group: redis
+    mode: '0770'
+  when: group_names[0] == "slave"
+
+- name: configure redis service file
+  template:
+    src: redis.service.j2
+    dest: /etc/systemd/system/redis.service
+
+- name: configure sentinel service file
+  template:
+    src: sentinel.service.j2
+    dest: /etc/systemd/system/sentinel.service
+    owner: root
+    mode: 644
+
+- name: reload systemd
+  shell: systemctl daemon-reload
+  notify:
+    - start redis
+    - start sentinel

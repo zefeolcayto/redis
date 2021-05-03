@@ -1,0 +1,38 @@
+---
+- name: set hostname
+  shell: hostnamectl set-hostname {{ inventory_hostname }}
+
+- name: disable and stop firewalld
+  shell: systemctl disable firewalld; systemctl stop firewalld
+
+- name: change remore hosts file from template
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+
+- name: install the 'Development tools' package group
+  yum:
+    name: "@Development tools"
+    state: present
+
+- name: install require packages
+  yum:
+    name: "{{ item }}"
+  with_items:
+    - gcc
+    - make
+    - wget
+    - tcl
+
+- name: copy redis installation file
+  copy:
+    src: redis-5.0.9.tar.gz
+    dest: /opt
+
+- name: Unarchive a file that is already on the remote machine
+  unarchive:
+    src: /opt/redis-5.0.9.tar.gz
+    dest: /opt
+    remote_src: yes
+
+

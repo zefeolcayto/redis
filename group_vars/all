@@ -1,0 +1,6 @@
+---
+redis_pass: 
+cluster_name: 
+down_after_time: 5000
+failover_time: 180000
+

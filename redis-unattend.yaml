@@ -1,0 +1,7 @@
+---
+- name: Redis Provisioning
+  hosts: all
+  become: yes
+  roles:
+   - prerequisites
+   - redis-install

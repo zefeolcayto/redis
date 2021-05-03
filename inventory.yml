@@ -1,0 +1,16 @@
+---
+all:
+  children:
+    master:
+      hosts:
+        redis01.domain.com:
+          ipv4: 192.168.XXX.XXX
+
+    slave:
+      hosts:
+        redis02.domain.com:
+          ipv4: 192.168.XXX.XXX
+
+        redis03.domain.com:
+          ipv4: 192.168.XXX.XXX
+...

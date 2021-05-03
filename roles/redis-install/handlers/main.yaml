@@ -1,0 +1,12 @@
+---
+- name: start redis
+  systemd:
+    name: redis
+    state: started
+    enabled: yes
+
+- name: start sentinel
+  systemd:
+    name: sentinel
+    state: started
+    enabled: yes
